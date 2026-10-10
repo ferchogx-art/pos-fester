@@ -139,109 +139,127 @@ with open("generated/index.html", "w", encoding="utf-8") as f:
             <div class="denom-row">
                 <span class="denom-label">💵 Billete $100</span>
                 
-$0.00
+            <div class="denom-row">
+                <span class="denom-label">💵 Billete \$50</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="b50">
+                <span class="denom-total" id="t50">\$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">💵 Billete \$20</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="b20">
+                <span class="denom-total" id="t20">\$0.00</span>
+            </div>
+            
+            <div class="denom-row" style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                <span class="denom-label">🪙 Moneda \$20</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="m20">
+                <span class="denom-total" id="tm20">\$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">🪙 Moneda \$10</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="m10">
+                <span class="denom-total" id="tm10">\$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">🪙 Moneda \$5</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="m5">
+                <span class="denom-total" id="tm5">\$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">🪙 Moneda \$2</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="m2">
+                <span class="denom-total" id="tm2">\$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">🪙 Moneda \$1</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="m1">
+                <span class="denom-total" id="tm1">\$0.00</span>
+            </div>
 
+            <div class="total-box">
+                Efectivo Total: <span id="grand-total">\$0.00</span>
+            </div>
+            <button class="btn-pay" style="margin-top:15px; background:#009688;" onclick="guardarCorte()">REGISTRAR CORTE Y RECOLECCIÓN</button>
+        </div>
+    </div>
 
-💵 Billete $50
+    <script>
+        let cart = [];
+        let total = 0;
 
-$0.00
+        function addToCart(name, price) {
+            cart.push({name, price});
+            updateCart();
+        }
 
+        function updateCart() {
+            const container = document.getElementById('cart-container');
+            const totalEles = document.getElementById('cart-total');
+            if(cart.length === 0) {
+                container.innerHTML = '<p id="empty-msg" style="color: #999; text-align: center; margin-top: 50px;">El carrito está vacío.<br>Haz clic en un producto para agregarlo.</p>';
+                totalEles.innerText = '\$0.00';
+                return;
+            }
+            
+            let html = '';
+            total = 0;
+            cart.forEach(item => {
+                html += `<div class="cart-item-row"><span>${item.name}</span><strong>$${item.price.toFixed(2)}</strong></div>`;
+                total += item.price;
+            });
+            container.innerHTML = html;
+            totalEles.innerText = '\$' + total.toFixed(2);
+        }
 
-💵 Billete $20
+        function procesarVenta() {
+            if(cart.length === 0) {
+                alert('Agrega artículos al carrito antes de cobrar.');
+                return;
+            }
+            const envio = document.getElementById('req-envio').checked;
+            alert('¡Operación registrada con éxito!\\n' + (envio ? 'Se generó orden de entrega a domicilio para el chofer.' : 'Entrega inmediata en mostrador.'));
+            cart = [];
+            document.getElementById('req-envio').checked = false;
+            updateCart();
+        }
 
-$0.00
-🪙 Moneda $20
+        function openArqueo() { document.getElementById('arqueo-modal').style.display = 'flex'; }
+        function closeArqueo() { document.getElementById('arqueo-modal').style.display = 'none'; }
 
-$0.00
+        function calcArqueo() {
+            const denoms = [
+                { id: 'b1000', val: 1000, out: 't1000' },
+                { id: 'b500', val: 500, out: 't500' },
+                { id: 'b200', val: 200, out: 't200' },
+                { id: 'b100', val: 100, out: 't100' },
+                { id: 'b50', val: 50, out: 't50' },
+                { id: 'b20', val: 20, out: 't20' },
+                { id: 'm20', val: 20, out: 'tm20' },
+                { id: 'm10', val: 10, out: 'tm10' },
+                { id: 'm5', val: 5, out: 'tm5' },
+                { id: 'm2', val: 2, out: 'tm2' },
+                { id: 'm1', val: 1, out: 'tm1' }
+            ];
+            
+            let grandTotal = 0;
+            denoms.forEach(d => {
+                const element = document.getElementById(d.id);
+                if (element) {
+                    const count = parseInt(element.value) || 0;
+                    const rowTotal = count * d.val;
+                    document.getElementById(d.out).innerText = '\$' + rowTotal.toFixed(2);
+                    grandTotal += rowTotal;
+                }
+            });
+            
+            document.getElementById('grand-total').innerText = '\$' + grandTotal.toFixed(2);
+        }
 
-
-🪙 Moneda $10
-
-$0.00
-
-
-🪙 Moneda $5
-
-$0.00
-
-
-🪙 Moneda $2
-
-$0.00
-
-
-🪙 Moneda $1
-
-$0.00
-Efectivo Total: $0.00
-
-REGISTRAR CORTE Y RECOLECCIÓN
-
-let cart = [];
-let total = 0;
-function addToCart(name, price) {
-cart.push({name, price});
-updateCart();
-}
-function updateCart() {
-const container = document.getElementById('cart-container');
-const totalEles = document.getElementById('cart-total');
-if(cart.length === 0) {
-container.innerHTML = 'El carrito está vacío.
-Haz clic en un producto para agregarlo.';
-totalEles.innerText = '$0.00';
-return;
-}
-let html = '';
-total = 0;
-cart.forEach(item => {
-html += <div class="cart-item-row"><span>${item.name}</span><strong>$${item.price.toFixed(2)}</strong></div>;
-total += item.price;
-});
-container.innerHTML = html;
-totalEles.innerText = '$' + total.toFixed(2);
-}
-function procesarVenta() {
-if(cart.length === 0) {
-alert('Agrega artículos al carrito antes de cobrar.');
-return;
-}
-const envio = document.getElementById('req-envio').checked;
-alert('¡Operación registrada con éxito!\n' + (envio ? 'Se generó orden de entrega a domicilio para el chofer.' : 'Entrega inmediata en mostrador.'));
-cart = [];
-document.getElementById('req-envio').checked = false;
-updateCart();
-}
-/* Funciones de la Calculadora de Arqueo */
-function openArqueo() { document.getElementById('arqueo-modal').style.display = 'flex'; }
-function closeArqueo() { document.getElementById('arqueo-modal').style.display = 'none'; }
-function calcArqueo() {
-const denoms = [
-{ id: 'b1000', val: 1000, out: 't1000' },
-{ id: 'b500', val: 500, out: 't500' },
-{ id: 'b200', val: 200, out: 't200' },
-{ id: 'b100', val: 100, out: 't100' },
-{ id: 'b50', val: 50, out: 't50' },
-{ id: 'b20', val: 20, out: 't20' },
-{ id: 'm20', val: 20, out: 'tm20' },
-{ id: 'm10', val: 10, out: 'tm10' },
-{ id: 'm5', val: 5, out: 'tm5' },
-{ id: 'm2', val: 2, out: 'tm2' },
-{ id: 'm1', val: 1, out: 'tm1' }
-];
-let grandTotal = 0;
-denoms.forEach(d => {
-const count = parseInt(document.getElementById(d.id).value) || 0;
-const rowTotal = count * d.val;
-document.getElementById(d.out).innerText = '$' + rowTotal.toFixed(2);
-grandTotal += rowTotal;
-});
-document.getElementById('grand-total').innerText = '$' + grandTotal.toFixed(2);
-}
-function guardarCorte() {
-const totalCash = document.getElementById('grand-total').innerText;
-alert('Arqueo guardado de forma segura.\nTotal en efectivo recolectado: ' + totalCash + '\nListo para depósito en sucursal bancaria al cierre.');
-closeArqueo();
-}
-
+        function guardarCorte() {
+            const totalCash = document.getElementById('grand-total').innerText;
+            alert('Arqueo guardado de forma segura.\\nTotal en efectivo recolectado: ' + totalCash + '\\nListo para depósito en sucursal bancaria al cierre.');
+            closeArqueo();
+        }
+    </script>
+</body>
 </html>
