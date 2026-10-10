@@ -1,100 +1,248 @@
- <!DOCTYPE html>
+# Generación del archivo index.html limpio y 100% interactivo con calculadora de arqueos integrada
+with open("generated/index.html", "w", encoding="utf-8") as f:
+    f.write("""<!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <title>Prototipo POS - Sistema Personalizado</title>
+    <title>Fester Personalizado - POS</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f4f6f9; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #009688; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        nav a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; }
-        .main-container { display: flex; flex: 1; overflow: hidden; }
+        header { background: #009688; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        nav a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: background 0.2s; }
+        nav a:hover { background: rgba(255,255,255,0.2); }
+        .main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
         .catalog-panel { flex: 3; padding: 20px; overflow-y: auto; }
-        .cart-panel { flex: 1.2; background: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; padding: 20px; }
+        .cart-panel { flex: 1.2; background: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; padding: 20px; box-shadow: -2px 0 5px rgba(0,0,0,0.05); }
         .categories { display: flex; gap: 10px; margin-bottom: 20px; }
-        .category-btn { background: #e0e0e0; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; }
+        .category-btn { background: #e0e0e0; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: 500; }
         .category-btn.active { background: #009688; color: white; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .product-card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .product-card img { width: 80px; height: 80px; background: #eee; margin-bottom: 10px; border-radius: 4px; }
-        .price { font-weight: bold; color: #333; margin: 5px 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .product-card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .price { font-weight: bold; color: #009688; margin: 5px 0; font-size: 16px; }
         .stock { font-size: 12px; color: #777; }
         .stock.low { color: #d32f2f; font-weight: bold; }
-        .cart-items { flex: 1; border-bottom: 1px solid #eee; margin-bottom: 15px; }
-        .delivery-section { background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
-        .btn-pay { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; }
+        .cart-items { flex: 1; border: 1px dashed #ccc; border-radius: 6px; margin-bottom: 15px; padding: 10px; overflow-y: auto; background: #fafafa; }
+        .cart-item-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .delivery-section { background: #e8f5e9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; border: 1px solid #c8e6c9; }
+        .btn-pay { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-pay:hover { background: #e68a00; }
+        
+        /* Modal de Arqueo de Caja */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 450px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .close-btn { font-size: 24px; cursor: pointer; color: #999; }
+        .close-btn:hover { color: #333; }
+        .denom-row { display: flex; align-items: center; margin-bottom: 8px; justify-content: space-between; }
+        .denom-label { width: 120px; font-weight: 500; }
+        .denom-input { width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+        .denom-total { width: 100px; text-align: right; font-weight: bold; color: #555; }
+        .total-box { background: #eee; padding: 12px; border-radius: 6px; text-align: right; font-size: 18px; font-weight: bold; margin-top: 15px; color: #009688; }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="font-size: 18px; font-weight: bold;">Fester Personalizado - POS</div>
+        <div style="font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 10px;">🛡️ Fester Personalizado</div>
         <nav>
-            <a href="#">🛒 Punto de Venta</a>
-            <a href="#">📦 Inventario</a>
-            <a href="#">📝 Cotizaciones</a>
+            <a onclick="switchTab('pos')">🛒 Punto de Venta</a>
+            <a onclick="openArqueo()">🧮 Corte de Caja</a>
             <a href="#">🚚 Bitácora Entregas</a>
-            <a href="#">📊 Reportes / KPIs</a>
         </nav>
-        <div>Cajero: Fernando M.</div>
+        <div>Cajero: <strong>Fernando M.</strong></div>
     </header>
 
     <div class="main-container">
         <!-- Panel Izquierdo: Catálogo -->
         <div class="catalog-panel">
             <div class="categories">
-                <button class="category-btn active">Todos</button>
+                <button class="category-btn active">Todos los productos</button>
                 <button class="category-btn">Impermeabilizantes</button>
-                <button class="category-btn">Pinturas</button>
-                <button class="category-btn">Servicios / Fletes</button>
+                <button class="category-btn">Mano de Obra / Servicios</button>
             </div>
             
             <div class="grid">
-                <div class="product-card">
-                    <div style="height:80px; background:#e8f5e9; display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:#009688; font-weight:bold;">F</div>
-                    <div style="font-size: 14px; font-weight: bold;">FESTER A3 ROJO 19L</div>
+                <div class="product-card" onclick="addToCart('FESTER A3 ROJO 19L', 1746)">
+                    <div style="height:90px; background:#e0f2f1; display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:#009688; font-size:32px; border-radius:6px;">🪣</div>
+                    <div style="font-size: 14px; font-weight: bold; height: 40px; overflow: hidden;">FESTER A3 ROJO 19L</div>
                     <div class="price">$1,746.00</div>
                     <div class="stock low">3 pza (Stock Crítico)</div>
                 </div>
-                <div class="product-card">
-                    <div style="height:80px; background:#e8f5e9; display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:#009688; font-weight:bold;">F</div>
-                    <div style="font-size: 14px; font-weight: bold;">MANO DE OBRA APLICACIÓN</div>
+                <div class="product-card" onclick="addToCart('MANO DE OBRA APLICACIÓN', 450)">
+                    <div style="height:90px; background:#efebe9; display:flex; align-items:center; justify-content:center; margin-bottom:10px; color:#795548; font-size:32px; border-radius:6px;">🛠️</div>
+                    <div style="font-size: 14px; font-weight: bold; height: 40px; overflow: hidden;">MANO DE OBRA APLICACIÓN</div>
                     <div class="price">$450.00</div>
-                    <div class="stock">🛠️ Servicio (No descuenta stock)</div>
+                    <div class="stock">Servicio (No afecta inventario)</div>
                 </div>
             </div>
         </div>
 
-        <!-- Panel Derecho: Carrito y Operaciones Especiales -->
+        <!-- Panel Derecho: Carrito -->
         <div class="cart-panel">
-            <h3>Venta Actual</h3>
-            <div class="cart-items">
-                <p style="color: #999; text-align: center; margin-top: 50px;">El carrito está vacío</p>
+            <h3 style="margin-top: 0; border-bottom: 2px solid #009688; padding-bottom: 5px;">Venta Actual</h3>
+            <div class="cart-items" id="cart-container">
+                <p id="empty-msg" style="color: #999; text-align: center; margin-top: 50px;">El carrito está vacío.<br>Haz clic en un producto para agregarlo.</p>
             </div>
             
-            <!-- Tu sección personalizada de Entregas -->
             <div class="delivery-section">
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">🚚 Control de Envío</label>
-                <input type="checkbox" id="req-envio"> <label for="req-envio">¿Requiere entrega a domicilio?</label>
-                <div style="margin-top: 8px; font-size: 12px; color: #666;">
-                    * Al marcarlo, imprimirá Ticket de Venta + Ticket de Chofer.
+                <label style="font-weight: bold; display: flex; align-items: center; gap: 5px; margin-bottom: 5px;">🚚 Control de Logística</label>
+                <input type="checkbox" id="req-envio"> <label for="req-envio" style="font-weight: 500; cursor: pointer;">¿Requiere entrega a domicilio?</label>
+                <div style="margin-top: 8px; font-size: 11px; color: #555; line-height: 1.3;">
+                    * Si se activa, guardará la dirección y mandará la orden a la Bitácora del Chofer.
                 </div>
             </div>
 
-            <!-- Métodos de Pago Multi-Método -->
             <div style="margin-bottom: 15px;">
-                <label style="font-weight: bold; font-size: 14px;">Método de Pago:</label>
-                <div style="display: flex; gap: 5px; margin-top: 5px;">
-                    <button style="flex:1; padding: 5px;">💵 Efec.</button>
-                    <button style="flex:1; padding: 5px;">📲 Trans.</button>
-                    <button style="flex:1; padding: 5px;">💳 Clic</button>
+                <label style="font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px;">Método de Liquidación:</label>
+                <div style="display: flex; gap: 5px;">
+                    <button style="flex:1; padding: 8px; border: 1px solid #ccc; background: #fff; font-weight: bold; border-radius: 4px; cursor: pointer;">💵 Efec.</button>
+                    <button style="flex:1; padding: 8px; border: 1px solid #ccc; background: #fff; font-weight: bold; border-radius: 4px; cursor: pointer;">📲 Trans.</button>
+                    <button style="flex:1; padding: 8px; border: 1px solid #ccc; background: #fff; font-weight: bold; border-radius: 4px; cursor: pointer;">💳 Clic</button>
                 </div>
             </div>
 
-            <button class="btn-pay">PROCESAR COBRO / APARTADO</button>
+            <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-bottom: 15px; padding-top: 5px; border-top: 2px solid #eee;">
+                <span>Total:</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+
+            <button class="btn-pay" onclick="procesarVenta()">PROCESAR OPERACIÓN</button>
         </div>
     </div>
 
-</body>
-</html>
+    <!-- MODAL DE ARQUEO DE CAJA (CALCULADORA DE DINERO) -->
+    <div class="modal" id="arqueo-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin: 0; color: #009688;">🧮 Calculadora de Arqueo Diario</h3>
+                <span class="close-btn" onclick="closeArqueo()">&times;</span>
+            </div>
+            <p style="font-size: 13px; color: #666; margin-top: 0;">Ingresa la cantidad física de billetes y monedas para el cierre de caja y depósito bancario.</p>
+            
+            <!-- Filas de Billetes -->
+            <div class="denom-row">
+                <span class="denom-label">💵 Billete $1000</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="b1000">
+                <span class="denom-total" id="t1000">$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">💵 Billete $500</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="b500">
+                <span class="denom-total" id="t500">$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">💵 Billete $200</span>
+                <input type="number" class="denom-input" min="0" value="0" oninput="calcArqueo()" id="b200">
+                <span class="denom-total" id="t200">$0.00</span>
+            </div>
+            <div class="denom-row">
+                <span class="denom-label">💵 Billete $100</span>
+$0.00
+
+
+💵 Billete $50
+
+$0.00
+
+
+💵 Billete $20
+
+$0.00
+🪙 Moneda $20
+
+$0.00
+
+
+🪙 Moneda $10
+
+$0.00
+
+
+🪙 Moneda $5
+
+$0.00
+
+
+🪙 Moneda $2
+
+$0.00
+
+
+🪙 Moneda $1
+
+$0.00
+Efectivo Total: $0.00
+
+REGISTRAR CORTE Y RECOLECCIÓN
+
+let cart = [];
+let total = 0;
+function addToCart(name, price) {
+cart.push({name, price});
+updateCart();
+}
+function updateCart() {
+const container = document.getElementById('cart-container');
+const totalEles = document.getElementById('cart-total');
+if(cart.length === 0) {
+container.innerHTML = 'El carrito está vacío.
+Haz clic en un producto para agregarlo.';
+totalEles.innerText = '$0.00';
+return;
+}
+let html = '';
+total = 0;
+cart.forEach(item => {
+html += <div class="cart-item-row"><span>${item.name}</span><strong>$${item.price.toFixed(2)}</strong></div>;
+total += item.price;
+});
+container.innerHTML = html;
+totalEles.innerText = '$' + total.toFixed(2);
+}
+function procesarVenta() {
+if(cart.length === 0) {
+alert('Agrega artículos al carrito antes de cobrar.');
+return;
+}
+const envio = document.getElementById('req-envio').checked;
+alert('¡Operación registrada con éxito!\n' + (envio ? 'Se generó orden de entrega a domicilio para el chofer.' : 'Entrega inmediata en mostrador.'));
+cart = [];
+document.getElementById('req-envio').checked = false;
+updateCart();
+}
+/* Funciones de la Calculadora de Arqueo */
+function openArqueo() { document.getElementById('arqueo-modal').style.display = 'flex'; }
+function closeArqueo() { document.getElementById('arqueo-modal').style.display = 'none'; }
+function calcArqueo() {
+const denoms = [
+{ id: 'b1000', val: 1000, out: 't1000' },
+{ id: 'b500', val: 500, out: 't500' },
+{ id: 'b200', val: 200, out: 't200' },
+{ id: 'b100', val: 100, out: 't100' },
+{ id: 'b50', val: 50, out: 't50' },
+{ id: 'b20', val: 20, out: 't20' },
+{ id: 'm20', val: 20, out: 'tm20' },
+{ id: 'm10', val: 10, out: 'tm10' },
+{ id: 'm5', val: 5, out: 'tm5' },
+{ id: 'm2', val: 2, out: 'tm2' },
+{ id: 'm1', val: 1, out: 'tm1' }
+];
+let grandTotal = 0;
+denoms.forEach(d => {
+const count = parseInt(document.getElementById(d.id).value) || 0;
+const rowTotal = count * d.val;
+document.getElementById(d.out).innerText = '$' + rowTotal.toFixed(2);
+grandTotal += rowTotal;
+});
+document.getElementById('grand-total').innerText = '$' + grandTotal.toFixed(2);
+}
+function guardarCorte() {
+const totalCash = document.getElementById('grand-total').innerText;
+alert('Arqueo guardado de forma segura.\nTotal en efectivo recolectado: ' + totalCash + '\nListo para depósito en sucursal bancaria al cierre.');
+closeArqueo();
+}
+
+
+
 """)
